@@ -1,10 +1,12 @@
 package com.github.aceton41k.simpleapp.ui.posts
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -12,6 +14,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.aceton41k.simpleapp.R
+import com.github.aceton41k.simpleapp.activity.LoginActivity
 import com.github.aceton41k.simpleapp.adapter.PostAdapter
 import com.github.aceton41k.simpleapp.api.RetrofitClient.postApiService
 import kotlinx.coroutines.launch
@@ -39,8 +42,12 @@ class PostFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         // Добавляем разделитель
-        val dividerItemDecoration = DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL)
-        val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.divider) // Используем кастомный drawable
+        val dividerItemDecoration =
+            DividerItemDecoration(requireContext(), LinearLayoutManager.VERTICAL)
+        val drawable = ContextCompat.getDrawable(
+            requireContext(),
+            R.drawable.divider
+        ) // Используем кастомный drawable
         drawable?.let {
             dividerItemDecoration.setDrawable(it)
         }
@@ -82,20 +89,36 @@ class PostFragment : Fragment() {
                         if (newPosts.isNotEmpty()) {
                             postAdapter.addPosts(newPosts)
                             currentPage++
-                        } else {
-                            Log.d("PostFragment", "No more posts to load")
                         }
-                    } ?: run {
-                        Log.d("PostFragment", "Response body is null")
                     }
-                } else {
-                    Log.d("PostFragment", "Response error: ${response.code()} ${response.message()}")
+                } else if (response.code() == 403) {
+                    handleTokenExpired()
                 }
             } catch (e: Exception) {
-                Log.e("PostFragment", "Error loading posts", e)
+                // Обработка ошибок сети или других исключений
             } finally {
                 isLoading = false
             }
         }
+
+    }
+
+    private fun handleTokenExpired() {
+        // Очистите токен
+        val sharedPreferences =
+            requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        with(sharedPreferences.edit()) {
+            remove("jwt_token")
+            apply()
+        }
+
+        // Покажите тостовое уведомление
+        Toast.makeText(requireContext(), "Session has expired. Please log in again.", Toast.LENGTH_SHORT).show()
+
+
+        // Перейдите на экран логина
+        val intent = Intent(requireContext(), LoginActivity::class.java)
+        startActivity(intent)
+        requireActivity().finish() // Закройте текущую активность, если нужно
     }
 }
