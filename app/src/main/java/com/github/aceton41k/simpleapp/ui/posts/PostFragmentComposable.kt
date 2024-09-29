@@ -1,6 +1,7 @@
 package com.github.aceton41k.simpleapp.ui.posts
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -57,6 +59,7 @@ fun PostFeed(viewModel: PostViewModel) {
     val posts by viewModel.posts.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val showModalBottomSheet = remember { mutableStateOf(false) }
+    val context = LocalContext.current // Получаем контекст
 
     // Функция для обработки создания поста
     fun onPostCreated(title: String, message: String) {
@@ -69,7 +72,9 @@ fun PostFeed(viewModel: PostViewModel) {
             updatedAt = null,
             modifiedBy = null
         )
-        viewModel.createPost(newPost) // Вызов метода ViewModel для создания поста
+        viewModel.createPost(newPost) { toastMessage ->
+            Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show() // Показываем тост
+        }
     }
 
     // Основной контейнер
@@ -129,7 +134,7 @@ fun PostFeed(viewModel: PostViewModel) {
                 // Содержимое модального окна
                 NewPostDialog(
                     onDismiss = { showModalBottomSheet.value = false }, // Закрываем окно при отмене
-                    onPostCreated = { title, message ->
+                    onPostCreated = { title, message  ->
                         onPostCreated(title, message) // Вызов функции для создания поста
                         showModalBottomSheet.value =
                             false // Закрыть модальное окно после создания поста

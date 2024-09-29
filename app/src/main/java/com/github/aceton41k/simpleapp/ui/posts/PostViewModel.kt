@@ -42,7 +42,7 @@ class PostViewModel(private val postApiService: PostApiService) : ViewModel() {
     private val _postResponse = MutableLiveData<Response<Post>>()
     val postResponse: LiveData<Response<Post>> get() = _postResponse
 
-    fun createPost(post: Post) {
+    fun createPost(post: Post, onPostCreated: (String) -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
             // Предполагается, что вы вызываете API для создания поста
@@ -52,6 +52,7 @@ class PostViewModel(private val postApiService: PostApiService) : ViewModel() {
                     // Проверяем, что response.body() не null
                     response.body()?.let { createdPost ->
                         _posts.value = _posts.value + createdPost // Обновляем список постов
+                        onPostCreated("Post added!") // Передаем сообщение о создании поста
                     } ?: run {
                         // Обработка случая, когда тело ответа null
                         Log.e("PostViewModel", "Post creation returned null response")
