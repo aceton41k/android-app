@@ -1,6 +1,6 @@
 package com.github.aceton41k.simpleapp.model
 
-data class PostResponse(
+data class GetAllPostResponse(
     val content: List<Post>,
     val pageable: Pageable,
     val last: Boolean,
